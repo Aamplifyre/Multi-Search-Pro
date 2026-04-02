@@ -354,7 +354,7 @@ const DEFAULTS = (function () {
   ];
 
   const misc = [
-    { id: "m1",  name: "Chrome Web Store",             url: "https://chromewebstore.google.com/search/%s" },
+    { id: "m1",  name: "Mozilla Add-ons",              url: "https://addons.mozilla.org/en-US/firefox/search/?q=%s" },
     { id: "m2",  name: "Google Maps",                  url: "https://maps.google.com/?q=%s" },
     { id: "m3",  name: "DDG Maps",                     url: "https://duckduckgo.com/?t=ffcm&q=%s&ia=web&iaxm=maps" },
     { id: "m4",  name: "Internet Archive Search",      url: "https://archive.org/search.php?query=%s" },
@@ -459,7 +459,7 @@ const makeId = (prefix = "eng") => `${prefix}_${Date.now()}_${Math.floor(Math.ra
 class ConfigManager {
   static async get() {
     try {
-      const { config } = await chrome.storage.local.get("config");
+      const { config } = await browser.storage.local.get("config");
       if (!config || !config.groups) return await this.resetToDefaults();
       config.groupOrder = config.groupOrder || Object.keys(config.groups);
       config.profiles = config.profiles || {};
@@ -489,13 +489,12 @@ class ConfigManager {
       cfg.groupOrder.push(gid);
     }
     cfg.profiles["default"] = { name: "Default", groups: cfg.groupOrder.slice() };
-    await chrome.storage.local.set({ config: cfg });
+    await browser.storage.local.set({ config: cfg });
     return cfg;
   }
 
   static async save(cfg) {
-    await chrome.storage.local.set({ config: cfg });
-    chrome.storage.local.get(null, () => {});
+    await browser.storage.local.set({ config: cfg });
   }
 }
 
@@ -529,7 +528,7 @@ async function createEngine(cfg, { name, url, icon }) {
 async function openUrlsThrottled(urls = [], { foreground = false, throttleMs = 120, maxTabs = 500 } = {}) {
   for (let i = 0; i < urls.length; i++) {
     try {
-      await chrome.tabs.create({ url: urls[i], active: !!foreground });
+      await browser.tabs.create({ url: urls[i], active: !!foreground });
     } catch (e) {
       console.warn("Failed to create tab", urls[i], e);
     }
@@ -538,38 +537,49 @@ async function openUrlsThrottled(urls = [], { foreground = false, throttleMs = 1
   }
 }
 
-chrome.runtime.onInstalled.addListener(async () => {
-  try {
-    const { config } = await chrome.storage.local.get("config");
+browser.runtime.onInstalled.addListener(() => {
+  browser.storage.local.get("config", (result) => {
+    const config = result.config;
     if (!config) {
-      await ConfigManager.resetToDefaults();
-      console.log("Multi-Search: default config initialized.");
+      ConfigManager.resetToDefaults().then(() => {
+        console.log("Multi-Search: default config initialized.");
+      });
     } else {
       console.log("Multi-Search: existing config present.");
     }
-  } catch (e) { console.error(e); }
+  });
 });
 
-chrome.contextMenus.removeAll(() => {
-  chrome.contextMenus.create({ id: "search_selected", title: "Multi-Search: Search selection", contexts: ["selection"] });
+browser.contextMenus.removeAll(() => {
+  browser.contextMenus.create({
+    id: "search_selected",
+    title: "Multi-Search: Search selection",
+    contexts: ["selection"]
+  });
 });
-chrome.contextMenus.onClicked.addListener(async (info) => {
+
+browser.contextMenus.onClicked.addListener(async (info) => {
   if (info.menuItemId === "search_selected") {
     const text = info.selectionText || "";
     if (!text) return;
     const cfg = await ConfigManager.get();
     const groups = cfg.groupOrder || Object.keys(cfg.groups);
-    chrome.runtime.sendMessage({ type: "OPEN_SEARCH_TABS", query: text, groups, foreground: false });
+    browser.runtime.sendMessage({ type: "OPEN_SEARCH_TABS", query: text, groups, foreground: false });
   }
 });
 
-chrome.commands.onCommand.addListener((command) => {
-  if (command === "quick-launch") {
-    chrome.windows.create({ url: chrome.runtime.getURL("popup.html"), type: "popup", width: 555, height: 720 });
-  }
-});
+// browser.commands.onCommand.addListener((command) => {
+//  if (command === "quick-launch") {
+//    browser.windows.create({
+//      url: browser.runtime.getURL("popup.html"),
+//      type: "popup",
+//      width: 555,
+//      height: 720
+//    });
+//  }
+//});
 
-chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+browser.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   (async () => {
     try {
       if (msg.type === "GET_CONFIG") {
@@ -590,6 +600,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         if (msg.groupId && cfg.groups[msg.groupId]) {
           cfg.groups[msg.groupId].assignedEngines = cfg.groups[msg.groupId].assignedEngines || [];
           cfg.groups[msg.groupId].assignedEngines.push(eng.id);
+          if (msg.enable) cfg.groups[msg.groupId].enabledEngines = cfg.groups[msg.groupId].enabledEngines || [];
           if (msg.enable) cfg.groups[msg.groupId].enabledEngines.push(eng.id);
         }
         await ConfigManager.save(cfg);
@@ -615,7 +626,6 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const urls = candidates
           .sort((a, b) => a.order - b.order)
           .map(item => item.eng.url.replace("%s", encodeURIComponent(msg.query || "")));
-
         const maxTabs = Number.isInteger(msg.maxTabs) ? Math.max(1, msg.maxTabs) : 500;
         if (urls.length > maxTabs && !msg.force) {
           sendResponse({ ok: false, reason: "TOO_MANY", count: urls.length });
@@ -624,7 +634,6 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const throttle = Number.isInteger(msg.throttleMs) ? msg.throttleMs : 120;
         await openUrlsThrottled(urls, { foreground: !!msg.foreground, throttleMs: throttle, maxTabs });
         sendResponse({ ok: true, opened: urls.length });
-
       } else if (msg.type === "OPEN_SPECIFIC_ENGINES") {
         const cfg = await ConfigManager.get();
         const urls = [];
@@ -638,16 +647,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         sendResponse({ ok: true, opened: urls.length });
       } else if (msg.type === "GET_POPUP_STATE") {
         try {
-          let stored;
-          if (chrome.storage.session) {
-            const res = await chrome.storage.session.get("popupState");
-            stored = res.popupState;
-          }
-          if (!stored && chrome.storage.local) {
-            const res = await chrome.storage.local.get("popupState");
-            stored = res.popupState;
-          }
-
+          const res = await browser.storage.local.get("popupState");
+          const stored = res.popupState;
           const defaults = {
             query: "",
             collapsed: {},
@@ -661,19 +662,14 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           console.error("Failed to load popupState", e);
           sendResponse({ query: "", collapsed: {}, selectedGroups: {}, keepOpen: true, showUnchecked: true });
         }
-
       } else if (msg.type === "SAVE_POPUP_STATE") {
         try {
           const stateToSave = msg.state || {};
-          if (chrome.storage.session) {
-            await chrome.storage.session.set({ popupState: stateToSave });
-          }
-          await chrome.storage.local.set({ popupState: stateToSave });
+          await browser.storage.local.set({ popupState: stateToSave });
           sendResponse({ ok: true });
         } catch (e) {
           console.error("Failed to save popupState", e);
-          await chrome.storage.local.set({ popupState: msg.state });
-          sendResponse({ ok: true });
+          sendResponse({ ok: false });
         }
       }
 
