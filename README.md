@@ -1,7 +1,11 @@
 # Multi-Search Pro
-You’re not supposed to rely on the search results of a single website, but nobody wants to run the same search process a second/third/fourth time. I wanted the ability to use every search engine simultaneously. Same search terms, multiple websites. I tried to find a browser extension that could do it, but they were all severely limited to the most popular websites (Google, Bing, Yahoo), and none of them were able to open all of the websites simultaneously. I came real close with an extension called SearchSK, but it was difficult to organize, and I still had to click each icon individually in order to search multiple websites. So I finally decided to make what I’ve always imagined, and now I have Multi-Search Pro, and it works pretty much exactly how I want.
+It is recommended that someone doing an online search refers to more than one source. Thing is, nobody wants to run the same search process a second/third/fourth time. I wanted the ability to use every search engine simultaneously. Same search terms, multiple websites. I tried to find a browser extension that could do it, but they were all severely limited to the most popular websites (Google, Bing, Yahoo), and none of them were able to open all of the websites simultaneously. I got really close to what I was looking for with an extension called SearchSK, which had bookmark customization that made me realize how much further a tool like this could be taken.
 
-200+ websites, sorted into “groups” that categorize the scope of research the websites provide (search engines, images, news, shopping, etc). Pretty much any website that translates your search terms somewhere within the URL, can be added to Multi-Search Pro.
+Looking for the best prices? Check every shopping website all at the same time. Looking for the perfect photograph? Check all of the photography websites all at the same time. Trying to find the best recipe for a meal? Check every recipe website all at the same time.
+
+This concept went beyond what I was even searching for. But the most importan detail that I could never seem to find in these tools was the "all at the same time" aspect. So I finally decided to make what I’ve always imagined, and kept working at it until it was exactly what I always wanted.
+
+200+ websites, sorted into “groups” that categorize the scope of research you're looking in to (search engines, images, news, shopping, etc). Pretty much any website that translates your search terms somewhere within the URL, can be added to Multi-Search Pro.
 
 Type what you want to search in the input field labeled “Type what you want to search here”. The “Launch” button will open a tab for every selected/checkboxed website within every selected/checkboxed group, and send your search terms to every single one of them. 
 
@@ -33,6 +37,8 @@ In order to customize Multi-Search Pro to include a new website:
 • Name the website in the “Engine name” field, then paste the URL in the “URL with %s” 
 
 • Click “Add” 
+
+• Bonus: a lot of websites that give you the ability to specify your search perameters (ie. distance, location, hide AI) will place those specifications within the URL as well, so if you always want a search you send to a website to fit those perameters, first set those perameters for the search on the website, check the URL to see if it applied, and then use that URL with your search term replaced with %s and apply that URL in Settings. (sometimes the URL looks like a scrambled mess of random character, test it to see if that scrambled URL will load the search again with your perameters applied)
 
 You may find that some websites complicate this process by unnecessarily re-writing URLs to keep them “clean”. Startpage is a glaring example, but thankfully there is a hidden way to utilize the %s process with Startpage to get it to work in Multi-Search Pro. Unfortunately, there are websites where, regardless of if the function is present, there may be a paywall or login requirement in order to run a search, which causes the %s process to rupture, and you will have to either be logged in/signed up in order to utilize it within Multi-Search Pro. I’ve skipped on these websites for the most part, but if you regularly utilize a website like this, I encourage you to add it in, just remember that you need to already be logged in to those websites on your browser in order for the searches to work.
 
