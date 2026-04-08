@@ -5,7 +5,7 @@ Looking for the best prices? Check every shopping website all at the same time. 
 
 This concept went beyond what I was even searching for. But, even with SearchSK, the most important detail that I could never seem to find in these tools was the "all at the same time" aspect. So I finally decided to make what I’ve always imagined, and kept working at it until it was exactly what I always wanted.
 
-200+ websites, sorted into “groups” that categorize the scope of research you're looking in to (search engines, images, news, shopping, etc). Pretty much any website that translates your search terms somewhere within the URL, can be added to Multi-Search Pro.
+300+ websites, sorted into “groups” that categorize the scope of research you're looking in to (search engines, images, news, shopping, etc). Pretty much any website that translates your search terms somewhere within the URL, can be added to Multi-Search Pro.
 
 Type what you want to search in the input field labeled “Type what you want to search here”. The “Launch” button will open a tab for every selected/checkboxed website within every selected/checkboxed group, and send your search terms to every single one of them. 
 
